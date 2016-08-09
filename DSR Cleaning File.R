@@ -377,7 +377,7 @@ for(YEAR in YEARS){
   growth.table <- growth.table %>%
     arrange(Grade, DOMAIN, Proficiency_Key, Scale_Growth, desc(Percentile)) 
   
-  sqlSave(db, growth.table, tablename = paste(YEAR, " Minnesota EL Growth"), rownames = F, append = F)
+  sqlSave(db, growth.table, tablename = paste(YEAR, "_Minnesota_EL_Growth", sep = ""), rownames = F, append = F)
   
   #save file as .txt file
   setwd(paste(homedir, "/Growth Tables/Finished Growth Tables", sep = ""))
