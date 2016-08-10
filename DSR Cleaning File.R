@@ -23,7 +23,7 @@
 rm(list = ls())
 
 #Check if packages are install and then install any packages needed to run program
-packages <- c("dplyr", "RODBC", "sets")
+packages <- c("dplyr", "RODBC", "sets", "plyr")
 
 for(package in packages){
   
