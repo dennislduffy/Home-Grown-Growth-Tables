@@ -1,0 +1,178 @@
+# #> sessionInfo()
+# R version 3.2.3 (2015-12-10)
+# Platform: i386-w64-mingw32/i386 (32-bit)
+# Running under: Windows 7 x64 (build 7601) Service Pack 1
+# 
+# locale:
+#   [1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252    LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
+# [5] LC_TIME=English_United States.1252    
+# 
+# attached base packages:
+#   [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# loaded via a namespace (and not attached):
+#   [1] tools_3.2.3
+
+
+#This script uses the combined DSR data files to calculate growth for MN using the home brewed growth tables
+
+#clear work space
+rm(list = ls())
+
+#define home directory
+homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files"
+
+#set directory
+setwd(homedir)
+
+#install packages
+packages.install = c("dplyr", "RODBC", "tidyr", "sets")
+
+for(package in packages.install){
+  
+  if(package %in%  rownames(installed.packages()) == F){
+    
+    install.package(package)
+    
+  }
+  
+}
+
+packages.install = c("dplyr", "RODBC", "tidyr")
+
+lapply(packages.install, library, character.only = T)
+
+
+#connect to database
+db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
+
+
+#Make a grade key. Note: Grades 9-12 are classified as HS because WIDA lumps those grades together for the growth tables. 
+LYGradeKey <- data.frame(LYGradeKey = c("KG", "FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH", "EIGHTH", 
+                                        rep("HS",4)), 
+                         grade.level = c("KG", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"))
+
+#Create alphabetical key for proficiency levels
+Proficiency.Key <- data.frame(Proficiency.Key = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"), 
+                             Proficiency = c(1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6)) 
+
+#create tuples of data that will be combined for the growth calculation
+
+DSR_TUPLE_13 <- sets::tuple("DSR_2012", "DSR_2013")
+DSR_TUPLE_14 <- sets::tuple("DSR_2013", "DSR_2014")
+DSR_TUPLE_15 <- sets::tuple("DSR_2014", "DSR_2015")
+DSR_TUPLE_16 <- sets::tuple("DSR_2015", "DSR_2016")
+
+tuple.set <- sets::set("DATA_2013" = DSR_TUPLE_13, 
+                       "DATA_2014" = DSR_TUPLE_14, 
+                       "DATA_2015" = DSR_TUPLE_15, 
+                       "DATA_2016" = DSR_TUPLE_16)
+
+tuple.names <- c("DATA_2013", "DATA_2014", "DATA_2015", "DATA_2016")
+  
+
+for (tuple.use in tuple.names){
+  
+  current.tuple <- tuple.set[[tuple.use]]
+  
+  #read in data sets
+  LYDATA <- sqlQuery(db, paste("SELECT * FROM ", current.tuple[1]), as.is = T)
+
+  
+  CYDATA <- sqlQuery(db, paste("SELECT * FROM ", current.tuple[2]), as.is = T)
+  
+  #subset LYDATA to join with CYDATA
+  LYDATA <- LYDATA %>%
+    left_join(LYGradeKey, by = c("GRADE" = "grade.level")) %>%
+    left_join(Proficiency.Key, by = c("ProficiencyLevel" = "Proficiency")) %>%
+    rename(LYScaleScore = ScaleScore) %>%
+    mutate(YEAR = substr(current.tuple[2], 5,8), 
+           Range_Key = paste(LYGradeKey, DOMAIN, Proficiency.Key, YEAR, sep = "_")) %>%
+    select(AnalysisID, DOMAIN, Range_Key, LYScaleScore)
+  
+  #define the year
+  YEAR <- substr(current.tuple[2], 5, 8)
+  
+  #join with CYDATA
+  student.data <- CYDATA %>%
+    inner_join(LYDATA, by = c("AnalysisID", "DOMAIN")) %>%
+    mutate(scorediff = ScaleScore - LYScaleScore, 
+           LOOPID = paste(AnalysisID, DOMAIN, sep = "_"), 
+           Growth.Band = "BAND") %>%
+    select(AnalysisID, DOMAIN, LOOPID, Range_Key, scorediff, Growth.Band)
+  
+  #create ID list
+  ID.list <- unique(student.data$LOOPID)
+  
+  #bring in growth table 
+  growth.table.name <- paste( YEAR, "_Minnesota_EL_Growth", sep = "")
+  growth.table <- sqlQuery(db, paste("SELECT * FROM", growth.table.name))
+  
+  for(ID in ID.list){
+    ID.position <- match(ID, ID.list)
+    table.name <- as.character(student.data$Range_Key[ID.position])
+    person.score <- student.data$scorediff[ID.position]
+    table.use <- growth.table %>% 
+      filter(Range_Key == table.name) %>% 
+      arrange(desc(Scale_Growth)) %>%
+      arrange(desc(Percentile)) 
+    ranks <- table.use$Percentile_Key
+    count <- 1
+    
+    if(is.na(table.use$Scale_Growth[2])){
+      
+      student.data$Growth.Band[ID.position] <- NA
+      
+    }
+    
+    else{
+      
+      while (person.score < table.use$Scale_Growth[count]){
+        
+        count <- count + 1
+        
+      }
+      
+      rank.use <- as.character(ranks[count])
+      student.data$Growth.Band[ID.position] <- rank.use 
+      
+    }
+    
+    print(paste(ID.position/length(ID.list)*100, "Percent Complete of ", YEAR, sep = " "))
+    
+  }
+  
+  sqlSave(db, student.data, paste("Student_Growth_", YEAR, sep = ""), rownames = F, append = F)
+  
+}  
+
+
+#close connection
+odbcClose(db)
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
