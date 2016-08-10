@@ -177,9 +177,9 @@ DSR_TUPLE_15 <- sets::tuple("DSR_2014", "DSR_2015")
 DSR_TUPLE_16 <- sets::tuple("DSR_2015", "DSR_2016")
 
 tuple.set <- sets::set("COMBINED_2013" = DSR_TUPLE_13, 
-                 "COMBINED_2014" = DSR_TUPLE_14, 
-                 "COMBINED_2015" = DSR_TUPLE_15, 
-                 "COMBINED_2016" = DSR_TUPLE_16)
+                       "COMBINED_2014" = DSR_TUPLE_14, 
+                       "COMBINED_2015" = DSR_TUPLE_15, 
+                       "COMBINED_2016" = DSR_TUPLE_16)
 
 tuple.names <- c("COMBINED_2013", "COMBINED_2014", "COMBINED_2015", "COMBINED_2016")
 
