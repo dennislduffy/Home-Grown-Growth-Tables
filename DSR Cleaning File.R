@@ -35,7 +35,7 @@ for(package in packages){
   
 }
 
-#set up dply and RODBC
+#set up dplyr and RODBC
 x = c("dplyr", "RODBC")
 
 lapply(x, library, character.only = T)
