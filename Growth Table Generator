@@ -1,0 +1,85 @@
+#This script converts individual growth tables into look up tables similar to tables produced in previous years by WIDA
+
+# > sessionInfo()
+# R version 3.2.3 (2015-12-10)
+# Platform: i386-w64-mingw32/i386 (32-bit)
+# Running under: Windows 7 x64 (build 7601) Service Pack 1
+# 
+# locale:
+#   [1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252    LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
+# [5] LC_TIME=English_United States.1252    
+# 
+# attached base packages:
+#   [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+#   [1] tidyr_0.4.0 dplyr_0.4.3
+# 
+# loaded via a namespace (and not attached):
+#   [1] lazyeval_0.1.10  magrittr_1.5     R6_2.1.2         assertthat_0.1   parallel_3.2.3   DBI_0.3.1        tools_3.2.3      Rcpp_0.12.3      data.table_1.9.6
+# [10] chron_2.3-47    
+
+rm(list = ls())
+
+#define home directory
+homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables"
+
+#Check if packages are install and then install any packages needed to run program
+packages <- c("dplyr", "tidyr")
+
+for(package in packages){
+  
+  if(package %in% rownames(installed.packages()) == F){
+    
+    install.packages(package)
+    
+  }
+  
+}
+
+#load packages
+lapply(packages, library, character.only = T)
+
+#Define list of starting grades
+GRADES <- c("KG", "FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH", "EIGHTH", "HS")
+
+#Define list of domains
+DOMAINS = c("COMPOSITE", "LISTENING", "SPEAKING", "READING", "WRITING")
+
+#Define list of years
+YEARS = c("2016", "2015", "2014", "2013")
+
+#loop through each year, domain, and grade to create the growth tables 
+for(YEAR in YEARS){
+  
+  for(GRADE in GRADES){
+    
+    for(DOMAIN in DOMAINS){
+      
+      #set working directory to look at growth tables for a givn year
+      setwd(paste(homedir, "/", YEAR, " Tables", sep = ""))
+      
+      files.combine <- paste(GRADE, "_", DOMAIN, "_*", sep = "")
+      
+      growth.files <- list.files(pattern = files.combine)
+      
+      growth.files <- data.frame(data.table::rbindlist(lapply(growth.files, readRDS)))
+      
+      growth.table <- growth.files %>%
+        filter(Scale_Growth != -999) %>%
+        select(Percentile, Proficiency, Scale_Growth) %>%
+        arrange(Proficiency) %>%
+        mutate(Percentile = paste(Percentile, "th", sep = "")) %>%
+        spread(Proficiency, Scale_Growth)
+      
+      #Set working directory for saving location 
+      setwd(paste(homedir, "/", YEAR, " Growth Tables Text Files", sep = ""))
+      
+      #save table
+      write.table(growth.table, paste(DOMAIN, "_", GRADE, "_", YEAR, ".txt", sep = ""), sep = "\t", row.names = F, na = "*")
+    }
+    
+  }
+  
+}
+
