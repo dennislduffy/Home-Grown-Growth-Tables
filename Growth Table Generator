@@ -76,7 +76,7 @@ for(YEAR in YEARS){
       setwd(paste(homedir, "/", YEAR, " Growth Tables Text Files", sep = ""))
       
       #save table
-      write.table(growth.table, paste(DOMAIN, "_", GRADE, "_", YEAR, ".txt", sep = ""), sep = "\t", row.names = F, na = "*")
+      write.table(growth.table, paste(GRADE, "_", DOMAIN, "_", YEAR, ".txt", sep = ""), sep = "\t", row.names = F, na = "*")
     }
     
   }
