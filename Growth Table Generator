@@ -66,10 +66,11 @@ for(YEAR in YEARS){
       growth.files <- data.frame(data.table::rbindlist(lapply(growth.files, readRDS)))
       
       growth.table <- growth.files %>%
-        filter(Scale_Growth != -999) %>%
-        select(Percentile, Proficiency, Scale_Growth) %>%
         arrange(Proficiency) %>%
-        mutate(Percentile = paste(Percentile, "th", sep = "")) %>%
+        mutate(Scale_Growth = ifelse(is.na(Scale_Growth) == T, as.character("*"), as.character(Scale_Growth)), 
+               Percentile = paste(Percentile, "th", sep = "")) %>%
+        filter(Scale_Growth != "-999") %>%
+        select(Percentile, Proficiency, Scale_Growth) %>%
         spread(Proficiency, Scale_Growth)
       
       #Set working directory for saving location 
@@ -77,6 +78,7 @@ for(YEAR in YEARS){
       
       #save table
       write.table(growth.table, paste(GRADE, "_", DOMAIN, "_", YEAR, ".txt", sep = ""), sep = "\t", row.names = F, na = "*")
+      
     }
     
   }
