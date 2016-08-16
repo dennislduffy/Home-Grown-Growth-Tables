@@ -25,7 +25,7 @@ rm(list = ls())
 homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables"
 
 #Check if packages are install and then install any packages needed to run program
-packages <- c("dplyr", "tidyr", "RODBC")
+packages <- c("dplyr", "tidyr", "RODBC", "scales", "plyr")
 
 for(package in packages){
   
@@ -38,7 +38,8 @@ for(package in packages){
 }
 
 #load packages
-lapply(packages, library, character.only = T)
+packages.load <- c("dplyr", "tidyr", "RODBC", "scales")
+lapply(packages.load, library, character.only = T)
 
 #Define list of starting grades
 GRADES <- c("KG", "FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH", "EIGHTH", "HS")
@@ -53,16 +54,73 @@ YEARS = c("2016", "2015", "2014", "2013")
 #connect to database
 db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
 
+#Create alphabetical key for proficiency levels
+Proficiency.Key <- data.frame(Proficiency.Key = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"), 
+                              LYProficiency = c(1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6)) 
+
+
 #create list of tables to use for growth calculation
 growth_tables <- c("Student_Growth_2013", "Student_Growth_2014", "Student_Growth_2015", "Student_Growth_2016")
 
 
+for(table.use in growth_tables){
+  
+  
+#define year
+YEAR <- substr(table.use, 16, 19)
+
+#Read in state growth data
+raw.data <- sqlQuery(db, paste("SELECT * FROM ", table.use, sep = ""), as.is = T)
+
+#Convert the growth band to a factor
+raw.data <- raw.data %>%
+  mutate(GrowthBand = as.factor(GrowthBand), 
+         GRADE = as.factor(sub("_.*", "", Range_Key)), 
+         Proficiency.Key = sub("_([^_]*)$", "", Range_Key), 
+         Proficiency.Key = regmatches(Proficiency.Key, regexpr(".$", Proficiency.Key))) %>%
+  left_join(Proficiency.Key, by = "Proficiency.Key")
 
 
 
+raw.data$GRADE <- factor(raw.data$GRADE, levels = c("KG", "FIRST", "SECOND", "THIRD", 
+                                                    "FOURTH", "FIFTH", "SIXTH", "SEVENTH", 
+                                                    "EIGHTH", "HS"))
 
+growth.data <- raw.data %>%
+  select(AnalysisID, DOMAIN, GrowthBand) %>%
+  spread(DOMAIN, GrowthBand) %>%
+  rename(COMPOSITE_GROWTH = COMPOSITE, 
+         LISTENING_GROWTH = LISTENING, 
+         READING_GROWTH = READING, 
+         SPEAKING_GROWTH = SPEAKING, 
+         WRITING_GROWTH = WRITING)
 
+proficiency.data <- raw.data %>%
+  select(AnalysisID, DOMAIN, LYProficiency, GRADE) %>%
+  spread(DOMAIN, LYProficiency) %>%
+  rename(LY_COMPOSITE_LEVEL = COMPOSITE, 
+         LY_LISTENING_LEVEL = LISTENING, 
+         LY_READING_LEVEL = READING, 
+         LY_WRITING_LEVEL = WRITING, 
+         LY_SPEAKING_LEVEL = SPEAKING)
 
+student.data <- left_join(growth.data, proficiency.data, by = c("AnalysisID"))  
+
+#all grades reading growth
+reading.data <- student.data %>%
+  select(GRADE, READING_GROWTH, LY_READING_LEVEL, AnalysisID) %>%
+  filter(complete.cases(.)) %>%
+  group_by(READING_GROWTH, LY_READING_LEVEL) %>%
+  summarise(student.count = length(AnalysisID))
+
+reading.data <- reading.data %>%
+  group_by(LY_READING_LEVEL, READING_GROWTH) %>%
+  summarise(student.count = sum(student.count)) %>%
+  mutate(PERCENT = paste(substr(percent(student.count/sum(student.count)), 1, 2), "%", sep = "")) %>%
+  select(LY_READING_LEVEL, READING_GROWTH, PERCENT) %>%
+  group_by(LY_READING_LEVEL)
+
+}
 
 
 
