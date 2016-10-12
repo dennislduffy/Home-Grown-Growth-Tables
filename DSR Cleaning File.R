@@ -41,10 +41,10 @@ x = c("dplyr", "RODBC")
 lapply(x, library, character.only = T)
 
 #set up home working directory
-homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files"
+homedir <- "/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files"
 
 #open database connection
-db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
+db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
 
 #define trim function
 trim <- function (x) gsub("^\\s+|\\s+$", "", x)
