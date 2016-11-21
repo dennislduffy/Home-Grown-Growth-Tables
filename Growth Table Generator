@@ -22,7 +22,7 @@
 rm(list = ls())
 
 #define home directory
-homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables"
+homedir <- "/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables"
 
 #Check if packages are install and then install any packages needed to run program
 packages <- c("dplyr", "tidyr")
