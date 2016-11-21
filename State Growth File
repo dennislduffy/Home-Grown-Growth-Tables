@@ -20,7 +20,7 @@
 rm(list = ls())
 
 #define home directory
-homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files"
+homedir <- "/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files"
 
 #set directory
 setwd(homedir)
@@ -44,7 +44,7 @@ lapply(packages.install, library, character.only = T)
 
 
 #connect to database
-db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
+db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
 
 
 #Make a grade key. Note: Grades 9-12 are classified as HS because WIDA lumps those grades together for the growth tables. 
