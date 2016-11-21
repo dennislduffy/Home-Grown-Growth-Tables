@@ -22,7 +22,7 @@
 rm(list = ls())
 
 #define home directory
-homedir <- "//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables/Distribution Tables"
+homedir <- "/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Tables/Distribution Tables"
 
 setwd(homedir)
 
@@ -54,7 +54,7 @@ YEARS = c("2016", "2015", "2014", "2013")
 
 
 #connect to database
-db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
+db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
 
 #Create alphabetical key for proficiency levels
 Proficiency.Key <- data.frame(Proficiency.Key = c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"), 
