@@ -20,10 +20,10 @@ Proficiency.Key <- data.frame(Proficiency.Key = c("A", "B", "C", "D", "E", "F", 
 grades.list <- as.list(c("KG", "FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH", "SIXTH", "SEVENTH", "EIGHTH", "NINTH", "TENTH", "ELEVENTH", "TWELFTH"))
 
 #set directory
-setwd("//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Check")
+setwd("/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/Growth Check")
 
 #connect to database
-db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=//EDU-FileServer/HomeDirs/dduffy/My Documents/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
+db <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=/Data/State DSRs/State DSR/MN Home Brewed Growth Tables/Growth Tables Files/GrowthTableDatabase.accdb")
 
 #create list of tables to use for growth calculation
 growth_tables <- c("Student_Growth_2013", "Student_Growth_2014", "Student_Growth_2015", "Student_Growth_2016")
